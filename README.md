@@ -13,4 +13,4 @@ Tab:
 ```
 Into this image:
 
-![E chord](examples/e.svg)
+![E chord](examples/e.png)
