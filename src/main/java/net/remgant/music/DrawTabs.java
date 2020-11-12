@@ -5,11 +5,12 @@ import org.apache.batik.svggen.SVGGraphics2D;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.Document;
 
-import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Objects;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,24 +19,19 @@ import java.util.ArrayList;
  * Time: 7:18:09 AM
  * To change this template use File | Settings | File Templates.
  */
-public class DrawTabs
-{
-    public static void main(String args[])
-    {
-        try
-        {
+public class DrawTabs {
+    public static void main(String[] args) {
+        try {
             new DrawTabs(args).run();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private String imageFileName;
-    private String inputFileName;
-    public DrawTabs(String args[])
-    {
+    private final String imageFileName;
+    private final String inputFileName;
+
+    public DrawTabs(String[] args) {
         inputFileName = args[0];
         imageFileName = args[1];
     }
@@ -48,8 +44,7 @@ public class DrawTabs
             "X01==1",
             "---32-"});
 
-    public void run() throws Exception
-    {
+    public void run() throws Exception {
       /*  String fM[] = {"Name: F",
                        "Tab:",
                        "XX--11",
@@ -111,7 +106,7 @@ public class DrawTabs
         java.util.List<Tablature> tabs = readFile(inputFileName);
 
         DOMImplementation domImpl =
-            GenericDOMImplementation.getDOMImplementation();
+                GenericDOMImplementation.getDOMImplementation();
 
         // Create an instance of org.w3c.dom.Document.
         String svgNS = "http://www.w3.org/2000/svg";
@@ -119,43 +114,37 @@ public class DrawTabs
 
         // Create an instance of the SVG Generator.
         SVGGraphics2D svgGenerator = new SVGGraphics2D(document);
-        if (!Tablature.isDefaultFontUnicode())
-        {
+        if (!Tablature.isDefaultFontUnicode()) {
             String osName = System.getProperty("os.name");
             if (osName.equals("Linux"))
                 Tablature.setDefaultFont("DejaVu Sans");
         }
         Area sample = sampleTab.draw(svgGenerator);
         System.out.println(sample.getBounds());
-        double margin =  Math.min(sample.getBounds2D().getWidth(),sample.getBounds2D().getHeight()) / 2.0;
+        double margin = Math.min(sample.getBounds2D().getWidth(), sample.getBounds2D().getHeight()) / 2.0;
 
         double x = margin;
         double y = margin;
         int columns = 3;
         int colCnt = 0;
-        for (Tablature t : tabs)
-        {
+        for (Tablature t : tabs) {
             Area a = t.draw(svgGenerator);
-            AffineTransform at = AffineTransform.getTranslateInstance(x,y);
+            AffineTransform at = AffineTransform.getTranslateInstance(x, y);
             a.transform(at);
             svgGenerator.fill(a);
-            colCnt ++;
-            if (colCnt >= columns)
-            {
+            colCnt++;
+            if (colCnt >= columns) {
                 x = margin;
                 y += sample.getBounds2D().getHeight() * 1.25;
                 colCnt = 0;
-            }
-            else
-            {
+            } else {
                 x += sample.getBounds2D().getWidth() * 1.25;
             }
         }
 
         FileOutputStream imageFileStream = new FileOutputStream(imageFileName);
-        boolean useCSS = true; // we want to use CSS style attributes
-        Writer out = new OutputStreamWriter(imageFileStream, "UTF-8");
-        svgGenerator.stream(out, useCSS);
+        Writer out = new OutputStreamWriter(imageFileStream, StandardCharsets.UTF_8);
+        svgGenerator.stream(out, true);
 
 //        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 //        System.out.println(ge);
@@ -168,21 +157,19 @@ public class DrawTabs
     }
 
     public java.util.List<Tablature> readFile(String fileName) throws IOException {
-        java.util.List<Tablature> list = new ArrayList<Tablature>();
+        java.util.List<Tablature> list = new ArrayList<>();
         BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(fileName)));
         String line = in.readLine();
         java.util.List<String> strList = null;
-        while (line != null)
-        {
-            if (line.length() == 0)
-            {
-                list.add(Tablature.parse(strList));
+        while (line != null) {
+            if (line.length() == 0) {
+                list.add(Tablature.parse(Objects.requireNonNull(strList)));
                 strList = null;
                 line = in.readLine();
                 continue;
             }
             if (strList == null)
-                strList = new ArrayList<String>();
+                strList = new ArrayList<>();
             strList.add(line);
             line = in.readLine();
         }
