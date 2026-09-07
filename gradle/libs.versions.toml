@@ -3,7 +3,7 @@
 
 [versions]
 junit = "4.13.2"
-org-apache-xmlgraphics-batik = "1.13"
+org-apache-xmlgraphics-batik = "1.19"
 
 [libraries]
 junit-junit = { module = "junit:junit", version.ref = "junit" }
