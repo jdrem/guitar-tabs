@@ -479,7 +479,7 @@ public class Tablature {
             for (int j = 0; j < tab[i].length; j++) {
                 System.out.print(tab[i][j] + " ");
                 if (tab[i][j] != null) {
-                    note[j] = findNote(tuning[j], i + (fret == 0 ? 1 : fret));
+                    note[j] = findNote(tuning[j], i + (fret == 0 ? 1 : fret + 1));
                 }
             }
             System.out.println();
