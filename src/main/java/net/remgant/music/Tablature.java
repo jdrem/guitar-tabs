@@ -21,6 +21,7 @@ public class Tablature {
     static Pattern notePtnr = Pattern.compile("([A-G][♯♭]?)");
     static Pattern fretPtrn = Pattern.compile("Fret:\\s+(\\d+)");
     static Pattern numberingPtrn = Pattern.compile("Numbering:\\s+(\\w+)");
+    static Pattern showNotesPtrn = Pattern.compile("ShowNotes:\\s+(\\w+)");
     static Pattern tabPattern = Pattern.compile("([=X01234/-]{6})");
     enum NumberingType {EMBEDDED, BELOW_STAFF}
     /*
@@ -89,10 +90,12 @@ public class Tablature {
     TabSymbols[][] tab;
     char[] finger;
     NumberingType numberingType;
+    boolean showNotesBelow;
 
     protected Tablature() {
         finger = new char[6];
         numberingType = NumberingType.EMBEDDED;
+        showNotesBelow = true;
     }
 
     static public Tablature parse(String[] input) {
@@ -116,6 +119,11 @@ public class Tablature {
                         t.numberingType = NumberingType.EMBEDDED;
                     else
                         t.numberingType = NumberingType.BELOW_STAFF;
+                }
+                m = showNotesPtrn.matcher(line);
+                if (m.matches()) {
+                    String a = m.group(1);
+                    t.showNotesBelow = a.equalsIgnoreCase("true");
                 }
                 m = tuningPtrn.matcher(line);
                 if (m.matches() && !m.group(1).equals("EADGBE")) {
@@ -353,7 +361,8 @@ public class Tablature {
             }
         }
 
-        showNotes(a, font, frc, y);
+        if (showNotesBelow)
+            showNotes(a, font, frc, y);
 
         at = AffineTransform.getTranslateInstance(-a.getBounds2D().getX(), -a.getBounds2D().getY());
         a.transform(at);
