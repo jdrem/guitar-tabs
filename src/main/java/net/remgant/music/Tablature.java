@@ -9,6 +9,7 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,8 +20,9 @@ public class Tablature {
     static Pattern tuningPtrn = Pattern.compile("Tuning:\\s+((?:[A-G][#b]?){6})");
     static Pattern notePtnr = Pattern.compile("([A-G][♯♭]?)");
     static Pattern fretPtrn = Pattern.compile("Fret:\\s+(\\d+)");
+    static Pattern numberingPtrn = Pattern.compile("Numbering:\\s+(\\w+)");
     static Pattern tabPattern = Pattern.compile("([=X01234/-]{6})");
-    static String sharp = "♯";
+    enum NumberingType {EMBEDDED, BELOW_STAFF}
     /*
    Name: E
    Tuning: EADGBE
@@ -78,16 +80,19 @@ public class Tablature {
     ------
     --2---
     */
-    static String flat = "♭";
-    static String[] noteList = new String[]{"A", "B" + flat, "B", "C", "C" + sharp, "D", "E" + flat, "E", "F", "F" + sharp, "G", "G" + sharp};
+    final static String sharp = "♯";
+    final static String flat = "♭";
+    final static String[] noteList = new String[]{"A", "B" + flat, "B", "C", "C" + sharp, "D", "E" + flat, "E", "F", "F" + sharp, "G", "G" + sharp};
     String name;
     String[] tuning;
     int fret;
     TabSymbols[][] tab;
     char[] finger;
+    NumberingType numberingType;
 
     protected Tablature() {
         finger = new char[6];
+        numberingType = NumberingType.EMBEDDED;
     }
 
     static public Tablature parse(String[] input) {
@@ -104,6 +109,14 @@ public class Tablature {
                 m = fretPtrn.matcher(line);
                 if (m.matches())
                     t.fret = Integer.parseInt(m.group(1));
+                m = numberingPtrn.matcher(line);
+                if (m.matches()) {
+                    String n = m.group(1);
+                    if (n.equalsIgnoreCase("Embedded"))
+                        t.numberingType = NumberingType.EMBEDDED;
+                    else
+                        t.numberingType = NumberingType.BELOW_STAFF;
+                }
                 m = tuningPtrn.matcher(line);
                 if (m.matches() && !m.group(1).equals("EADGBE")) {
                     String tt = m.group(1).replace('#', '♯');
@@ -166,16 +179,6 @@ public class Tablature {
     public static Tablature parse(List<String> list) {
         String[] array = list.toArray(new String[0]);
         return parse(array);
-    }
-
-    public static void main(String[] args) {
-        String[] e = {"Name: E",
-                "Tuning: EADGBE",
-                "Fret: 0",
-                "Tab:",
-                "0--100",
-                "-32---"};
-        @SuppressWarnings({"UnusedDeclaration"}) Tablature t = Tablature.parse(e);
     }
 
     public static void setDefaultFont(String fontName) {
@@ -265,12 +268,23 @@ public class Tablature {
             a.add(new Area(rx));
             a.add(new Area(ry));
         }
+
+        font = font.deriveFont(12.0f);
+        Map<Character, Area> fingeringMap = Map.of(
+                '1',  new Area(font.createGlyphVector(frc, "1").getOutline()),
+                '2',  new Area(font.createGlyphVector(frc, "2").getOutline()),
+                '3',  new Area(font.createGlyphVector(frc, "3").getOutline()),
+                '4',  new Area(font.createGlyphVector(frc, "4").getOutline())
+        );
         for (int i = 0; i < tab.length; i++) {
             int fret = i + 1;
             for (int j = 0; j < 6; j++) {
                 int string = j + 1;
                 if (tab[i][j] != null  && tab[i][j] != TabSymbols.BR) {
-                    printDot(a, string, fret, x, y);
+                    if (finger[j] == 'X' || finger[j] == '0' || numberingType == NumberingType.BELOW_STAFF)
+                        printDot(a, string, fret, x, y);
+                    else
+                        printDot(a, string, fret, x, y, fingeringMap.get(finger[j]));
                 }
                 if (tab[i][j] == TabSymbols.BR_ST) {
                     int barreEnd = 0;
@@ -303,38 +317,40 @@ public class Tablature {
             y += 4;
         }
 
+        if (numberingType == NumberingType.BELOW_STAFF) {
 
-        font = font.deriveFont(12.0f);
-        Area one = new Area(font.createGlyphVector(frc, "1").getOutline());
-        // y += 5 * 17 + (int)(one.getBounds2D().getHeight() * 1.33);
-        y += (int) (one.getBounds2D().getHeight() * 1.33);
-        one.transform(AffineTransform.getTranslateInstance(-(one.getBounds2D().getWidth() / 2.0), y));
-        Area two = new Area(font.createGlyphVector(frc, "2").getOutline());
-        two.transform(AffineTransform.getTranslateInstance(-(two.getBounds2D().getWidth() / 2.0), y));
-        Area three = new Area(font.createGlyphVector(frc, "3").getOutline());
-        three.transform(AffineTransform.getTranslateInstance(-(three.getBounds2D().getWidth() / 2.0), y));
-        Area four = new Area(font.createGlyphVector(frc, "4").getOutline());
-        four.transform(AffineTransform.getTranslateInstance(-(four.getBounds2D().getWidth() / 2.0), y));
+            font = font.deriveFont(12.0f);
+            Area one = new Area(font.createGlyphVector(frc, "1").getOutline());
+            // y += 5 * 17 + (int)(one.getBounds2D().getHeight() * 1.33);
+            y += (int) (one.getBounds2D().getHeight() * 1.33);
+            one.transform(AffineTransform.getTranslateInstance(-(one.getBounds2D().getWidth() / 2.0), y));
+            Area two = new Area(font.createGlyphVector(frc, "2").getOutline());
+            two.transform(AffineTransform.getTranslateInstance(-(two.getBounds2D().getWidth() / 2.0), y));
+            Area three = new Area(font.createGlyphVector(frc, "3").getOutline());
+            three.transform(AffineTransform.getTranslateInstance(-(three.getBounds2D().getWidth() / 2.0), y));
+            Area four = new Area(font.createGlyphVector(frc, "4").getOutline());
+            four.transform(AffineTransform.getTranslateInstance(-(four.getBounds2D().getWidth() / 2.0), y));
 
-        for (char c : finger) {
-            switch (c) {
-                case '1':
-                    a.add(one);
-                    break;
-                case '2':
-                    a.add(two);
-                    break;
-                case '3':
-                    a.add(three);
-                    break;
-                case '4':
-                    a.add(four);
-                    break;
+            for (char c : finger) {
+                switch (c) {
+                    case '1':
+                        a.add(one);
+                        break;
+                    case '2':
+                        a.add(two);
+                        break;
+                    case '3':
+                        a.add(three);
+                        break;
+                    case '4':
+                        a.add(four);
+                        break;
+                }
+                one.transform(AffineTransform.getTranslateInstance(17.0, 0.0));
+                two.transform(AffineTransform.getTranslateInstance(17.0, 0.0));
+                three.transform(AffineTransform.getTranslateInstance(17.0, 0.0));
+                four.transform(AffineTransform.getTranslateInstance(17.0, 0.0));
             }
-            one.transform(AffineTransform.getTranslateInstance(17.0, 0.0));
-            two.transform(AffineTransform.getTranslateInstance(17.0, 0.0));
-            three.transform(AffineTransform.getTranslateInstance(17.0, 0.0));
-            four.transform(AffineTransform.getTranslateInstance(17.0, 0.0));
         }
 
         showNotes(a, font, frc, y);
@@ -342,92 +358,6 @@ public class Tablature {
         at = AffineTransform.getTranslateInstance(-a.getBounds2D().getX(), -a.getBounds2D().getY());
         a.transform(at);
         return a;
-    }
-
-    @Deprecated
-    public void draw(Graphics2D g, int x, int y) {
-        Area a = new Area();
-
-        int lineWidth = 1;
-        int h = 85 + lineWidth;
-        int w = 85 + lineWidth;
-
-        int xx = x;
-        int yy = y;
-        for (int i = 0; i < 6; i++) {
-            Rectangle2D.Float rx = new Rectangle.Float((float) xx, (float) y,
-                    (float) lineWidth, (float) h);
-            Rectangle2D.Float ry = new Rectangle.Float((float) x, (float) yy,
-                    (float) w, (float) lineWidth);
-            xx += 17;
-            yy += 17;
-            a.add(new Area(rx));
-            a.add(new Area(ry));
-        }
-        for (int i = 0; i < tab.length; i++) {
-            int fret = i + 1;
-            for (int j = 0; j < 6; j++) {
-                int string = j + 1;
-                if (tab[i][j] != null) {
-                    printDot(a, string, fret, x, y);
-                }
-                if (tab[i][j] == TabSymbols.BR_ST) {
-                    int barreEnd = 0;
-                    for (int k = j; k < 6; k++) {
-                        if (tab[i][k] == TabSymbols.BR_END) {
-                            barreEnd = k + 1;
-                            break;
-                        }
-                    }
-                    if (barreEnd > 0)
-                        printBarre(a, string, barreEnd, fret, x, y);
-
-                }
-            }
-        }
-        g.setColor(Color.BLACK);
-        g.fill(a);
-    }
-
-    @Deprecated
-    public void draw(Area a, int x, int y) {
-        int lineWidth = 1;
-        int h = 85 + lineWidth;
-        int w = 85 + lineWidth;
-
-        int xx = x;
-        int yy = y;
-        for (int i = 0; i < 6; i++) {
-            Rectangle2D.Float rx = new Rectangle.Float((float) xx, (float) y,
-                    (float) lineWidth, (float) h);
-            Rectangle2D.Float ry = new Rectangle.Float((float) x, (float) yy,
-                    (float) w, (float) lineWidth);
-            xx += 17;
-            yy += 17;
-            a.add(new Area(rx));
-            a.add(new Area(ry));
-        }
-        for (int i = 0; i < tab.length; i++) {
-            int fret = i + 1;
-            for (int j = 0; j < 6; j++) {
-                int string = j + 1;
-                if (tab[i][j] != null) {
-                    printDot(a, string, fret, x, y);
-                }
-                if (tab[i][j] == TabSymbols.BR_ST) {
-                    int barreEnd = 0;
-                    for (int k = j; k < 6; k++) {
-                        if (tab[i][k] == TabSymbols.BR_END) {
-                            barreEnd = k + 1;
-                            break;
-                        }
-                    }
-                    if (barreEnd > 0)
-                        printBarre(a, string, barreEnd, fret, x, y);
-
-                }
-            }
-        }
     }
 
     private void printDot(Area a, int string, int fret, int xOffset, int yOffset) {
@@ -440,14 +370,24 @@ public class Tablature {
         a.add(d);
     }
 
+    private void printDot(Area a, int string, int fret, int xOffset, int yOffset, Area fingering) {
+        Ellipse2D.Float dot = new Ellipse2D.Float(-5.0f, -5.0f, 10.0f, 10.0f);
+        AffineTransform at = new AffineTransform();
+        at.translate(xOffset, yOffset);
+        at.translate((string - 1) * 17, (double) (fret * 17) - (17.0 / 2.0));
+        Area d = new Area(dot);
+        d.transform(at);
+        a.subtract(d);
+        Area f = new Area(fingering);
+        f.transform(AffineTransform.getScaleInstance(0.5, 0.5));
+        double dx = d.getBounds2D().getX() + d.getBounds2D().getWidth()/2.0 - (f.getBounds2D().getX() + f.getBounds2D().getWidth()/2.0);
+        double dy = d.getBounds2D().getY() + d.getBounds2D().getHeight()/2.0 - (f.getBounds2D().getY() + f.getBounds2D().getHeight()/2.0);
+        f.transform((AffineTransform.getTranslateInstance(dx, dy)));
+        d.subtract(f);
+        a.add(d);
+    }
+
     private void printBarre(Area a, int start, int end, int fret, int xOffset, int yOffset) {
-//        for (int i = 0; i < end - start; i++) {
-//            printDot(a, start + i, fret, xOffset, yOffset);
-//        }
-
-//        printDot(a, start, fret, xOffset, yOffset);
-//        printDot(a, end-1, fret, xOffset,yOffset);
-
         Area e1 = new Area(new Ellipse2D.Float(-8.5f, -8.5f, 17.0f, 17.0f));
         Area e2 = new Area(new Ellipse2D.Float(-8.5f, -5.5f, 17.0f, 17.0f));
         e1.subtract(e2);
