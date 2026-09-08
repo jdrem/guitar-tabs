@@ -269,7 +269,7 @@ public class Tablature {
             int fret = i + 1;
             for (int j = 0; j < 6; j++) {
                 int string = j + 1;
-                if (tab[i][j] != null) {
+                if (tab[i][j] != null  && tab[i][j] != TabSymbols.BR) {
                     printDot(a, string, fret, x, y);
                 }
                 if (tab[i][j] == TabSymbols.BR_ST) {
@@ -441,9 +441,12 @@ public class Tablature {
     }
 
     private void printBarre(Area a, int start, int end, int fret, int xOffset, int yOffset) {
-        for (int i = 0; i < end - start; i++) {
-            printDot(a, start + i, fret, xOffset, yOffset);
-        }
+//        for (int i = 0; i < end - start; i++) {
+//            printDot(a, start + i, fret, xOffset, yOffset);
+//        }
+
+//        printDot(a, start, fret, xOffset, yOffset);
+//        printDot(a, end-1, fret, xOffset,yOffset);
 
         Area e1 = new Area(new Ellipse2D.Float(-8.5f, -8.5f, 17.0f, 17.0f));
         Area e2 = new Area(new Ellipse2D.Float(-8.5f, -5.5f, 17.0f, 17.0f));
