@@ -14,14 +14,13 @@ import java.util.regex.Pattern;
 
 public class Tablature {
     static String fontName = "SansSerif";
-
-    enum TabSymbols {DOT, BR_ST, BR, BR_END}
-
-    String name;
-    String[] tuning;
-    int fret;
-    TabSymbols[][] tab;
-    char[] finger;
+    static Pattern namePtrn = Pattern.compile("Name:\\s+(.*)");
+    @SuppressWarnings({"UnusedDeclaration"})
+    static Pattern tuningPtrn = Pattern.compile("Tuning:\\s+((?:[A-G][#b]?){6})");
+    static Pattern notePtnr = Pattern.compile("([A-G][♯♭]?)");
+    static Pattern fretPtrn = Pattern.compile("Fret:\\s+(\\d+)");
+    static Pattern tabPattern = Pattern.compile("([=X01234/-]{6})");
+    static String sharp = "♯";
     /*
    Name: E
    Tuning: EADGBE
@@ -79,17 +78,17 @@ public class Tablature {
     ------
     --2---
     */
+    static String flat = "♭";
+    static String[] noteList = new String[]{"A", "B" + flat, "B", "C", "C" + sharp, "D", "E" + flat, "E", "F", "F" + sharp, "G", "G" + sharp};
+    String name;
+    String[] tuning;
+    int fret;
+    TabSymbols[][] tab;
+    char[] finger;
 
     protected Tablature() {
         finger = new char[6];
     }
-
-    static Pattern namePtrn = Pattern.compile("Name:\\s+(.*)");
-    @SuppressWarnings({"UnusedDeclaration"})
-    static Pattern tuningPtrn = Pattern.compile("Tuning:\\s+((?:[A-G][#b]?){6})");
-    static Pattern notePtnr = Pattern.compile("([A-G][\u266f\u266d]?)");
-    static Pattern fretPtrn = Pattern.compile("Fret:\\s+(\\d+)");
-    static Pattern tabPattern = Pattern.compile("([=X01234/-]{6})");
 
     static public Tablature parse(String[] input) {
         Tablature t = new Tablature();
@@ -99,16 +98,16 @@ public class Tablature {
             if (!inTab) {
                 Matcher m = namePtrn.matcher(line);
                 if (m.matches()) {
-                    t.name = m.group(1).replace('#', '\u266f');
-                    t.name = t.name.replace('b', '\u266d');
+                    t.name = m.group(1).replace('#', '♯');
+                    t.name = t.name.replace('b', '♭');
                 }
                 m = fretPtrn.matcher(line);
                 if (m.matches())
                     t.fret = Integer.parseInt(m.group(1));
                 m = tuningPtrn.matcher(line);
                 if (m.matches() && !m.group(1).equals("EADGBE")) {
-                    String tt = m.group(1).replace('#', '\u266f');
-                    tt = tt.replace('b', '\u266d');
+                    String tt = m.group(1).replace('#', '♯');
+                    tt = tt.replace('b', '♭');
                     Matcher mm = notePtnr.matcher(tt);
                     t.tuning = new String[6];
                     int i = 0;
@@ -169,6 +168,25 @@ public class Tablature {
         return parse(array);
     }
 
+    public static void main(String[] args) {
+        String[] e = {"Name: E",
+                "Tuning: EADGBE",
+                "Fret: 0",
+                "Tab:",
+                "0--100",
+                "-32---"};
+        @SuppressWarnings({"UnusedDeclaration"}) Tablature t = Tablature.parse(e);
+    }
+
+    public static void setDefaultFont(String fontName) {
+        Tablature.fontName = fontName;
+    }
+
+    public static boolean isDefaultFontUnicode() {
+        Font f = Font.decode(fontName);
+        return f.canDisplay('♯') && f.canDisplay('♭');
+    }
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (char c : finger) {
@@ -205,7 +223,7 @@ public class Tablature {
         AffineTransform at = AffineTransform.getTranslateInstance(xxx, 0);
         n.transform(at);
         a.add(n);
-        y += 2 * n.getBounds().getHeight();
+        y += (int) (2 * n.getBounds().getHeight());
 
         font = font.deriveFont(12.0f);
         Area X = new Area(font.createGlyphVector(frc, "X").getOutline());
@@ -272,7 +290,7 @@ public class Tablature {
 
         if (tuning != null) {
             Area l = new Area(font.createGlyphVector(frc, "E").getOutline());
-            y += l.getBounds().getHeight();
+            y += (int) l.getBounds().getHeight();
             double xAdj = l.getBounds2D().getWidth() / 2.0;
             font = font.deriveFont(8.0f);
             for (int i = 0; i < 6; i++) {
@@ -442,10 +460,6 @@ public class Tablature {
         a.add(e1);
     }
 
-    static String sharp = "\u266f";
-    static String flat = "\u266d";
-    static String[] noteList = new String[]{"A", "B" + flat, "B", "C", "C" + sharp, "D", "E" + flat, "E", "F", "F" + sharp, "G", "G" + sharp};
-
     private String findNote(String note, int steps) {
         int idx = -1;
         for (int i = 0; i < noteList.length; i++) {
@@ -490,7 +504,7 @@ public class Tablature {
         System.out.println();
 
         Area l = new Area(font.createGlyphVector(frc, "E").getOutline());
-        yOffset += 2.0 + l.getBounds().getHeight();
+        yOffset += (int) (2.0 + l.getBounds().getHeight());
         double xAdj = l.getBounds2D().getWidth() / 2.0;
         font = font.deriveFont(12.0f);
         for (int i = 0; i < 6; i++) {
@@ -503,22 +517,5 @@ public class Tablature {
 
     }
 
-    public static void main(String[] args) {
-        String[] e = {"Name: E",
-                "Tuning: EADGBE",
-                "Fret: 0",
-                "Tab:",
-                "0--100",
-                "-32---"};
-        @SuppressWarnings({"UnusedDeclaration"}) Tablature t = Tablature.parse(e);
-    }
-
-    public static void setDefaultFont(String fontName) {
-        Tablature.fontName = fontName;
-    }
-
-    public static boolean isDefaultFontUnicode() {
-        Font f = Font.decode(fontName);
-        return f.canDisplay('\u266f') && f.canDisplay('\u266d');
-    }
+    enum TabSymbols {DOT, BR_ST, BR, BR_END}
 }
