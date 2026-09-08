@@ -10,6 +10,7 @@ import java.awt.geom.Area;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -20,20 +21,23 @@ import java.util.Objects;
  * To change this template use File | Settings | File Templates.
  */
 public class DrawTabs {
-    public static void main(String[] args) {
-        try {
-            new DrawTabs(args).run();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    static void main(String[] args) throws Exception {
+        new DrawTabs(args).run();
     }
 
     private final String imageFileName;
     private final String inputFileName;
 
     public DrawTabs(String[] args) {
-        inputFileName = args[0];
-        imageFileName = args[1];
+        if (args.length >= 2) {
+            inputFileName = args[0];
+            imageFileName = args[1];
+        } else if (args.length == 1) {
+            inputFileName = null;
+            imageFileName = args[0];
+        } else {
+            throw new RuntimeException("must specify at least one argument");
+        }
     }
 
     Tablature sampleTab = Tablature.parse(new String[]{
@@ -45,65 +49,65 @@ public class DrawTabs {
             "---32-"});
 
     public void run() throws Exception {
-      /*  String fM[] = {"Name: F",
-                       "Tab:",
-                       "XX--11",
-                       "---2--",
-                       "--3---"};
-          String e[] = {"Name: E",
-                      "Tuning: EADGBE",
-                      "Fret: 0",
-                      "Tab:",
-                      "0--100",
-                      "-32---"};
-        String c7[] = {"Name: C7",
-                       "Fret: 7",
-                       "Tab:",
-                       "1====1",
-                       "---2--",
-                       "-3----"};
-        String a9[] = {"Name: A9",
-                       "Fret: 3",
-                       "Tab:",
-                       "-1=1-X",
-                       "4-3-2-"};
-        String d_dadgad[] = {"Name: D",
-                             "Tuning: DADGAD",
-                             "Tab:",
-                             "00--00",
-                             "---1--",
-                             "------",
-                             "--2---"};
-        String gm[] = {"Name: Gm",
-                       "Tab:",
-                       "XX----",
-                       "------",
-                       "---1=1",
-                       "------",
-                       "--3---"};
-        String fsh[] = {"Name: F#",
-                        "Tab:",
-                        "------",
-                        "1====1",
-                        "---2--",
-                        "-43---"};
-        String bfl[] = {"Name: Bb",
-                        "Fret: 5",
-                        "Tab:",
-                        "1====1",
-                        "------",
-                        "-43---"};
-        String tt[] = {"Name: D",
-                      "Tab:",
-                      "XX0---",
-                      "---2-1",
-                      "----3-"};
-
-        Tablature tabs[] = new Tablature[]{Tablature.parse(a9),Tablature.parse(fM),Tablature.parse(e),Tablature.parse(c7),
-                        Tablature.parse(d_dadgad),Tablature.parse(gm),Tablature.parse(fsh),Tablature.parse(bfl),
-                        Tablature.parse(tt)};*/
-
-        java.util.List<Tablature> tabs = readFile(inputFileName);
+        List<Tablature> tabs;
+        if (inputFileName != null){
+            tabs = readFile(inputFileName);
+        } else {
+            tabs = List.of(
+                    Tablature.parse(new String[]{"Name: F",
+                            "Tab:",
+                            "XX--11",
+                            "---2--",
+                            "--3---"}),
+                    Tablature.parse(new String[]{"Name: E",
+                            "Tuning: EADGBE",
+                            "Fret: 0",
+                            "Tab:",
+                            "0--100",
+                            "-32---"}),
+                    Tablature.parse(new String[]{"Name: C7",
+                            "Fret: 7",
+                            "Tab:",
+                            "1====1",
+                            "---2--",
+                            "-3----"}),
+                    Tablature.parse(new String[]{"Name: A9",
+                            "Fret: 3",
+                            "Tab:",
+                            "-1=1-X",
+                            "4-3-2-"}),
+                    Tablature.parse(new String[]{"Name: D",
+                            "Tuning: DADGAD",
+                            "Tab:",
+                            "00--00",
+                            "---1--",
+                            "------",
+                            "--2---"}),
+                    Tablature.parse(new String[]{"Name: Gm",
+                            "Tab:",
+                            "XX----",
+                            "------",
+                            "---1=1",
+                            "------",
+                            "--3---"}),
+                    Tablature.parse(new String[]{"Name: F#",
+                            "Tab:",
+                            "------",
+                            "1====1",
+                            "---2--",
+                            "-43---"}),
+                    Tablature.parse(new String[]{"Name: Bb",
+                            "Fret: 5",
+                            "Tab:",
+                            "1====1",
+                            "------",
+                            "-43---"}),
+                    Tablature.parse(new String[]{"Name: D",
+                            "Tab:",
+                            "XX0---",
+                            "---2-1",
+                            "----3-"}));
+        }
 
         DOMImplementation domImpl =
                 GenericDOMImplementation.getDOMImplementation();
@@ -145,16 +149,7 @@ public class DrawTabs {
         FileOutputStream imageFileStream = new FileOutputStream(imageFileName);
         Writer out = new OutputStreamWriter(imageFileStream, StandardCharsets.UTF_8);
         svgGenerator.stream(out, true);
-
-//        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-//        System.out.println(ge);
-//        Font ff[] = ge.getAllFonts();
-//        for (Font f : ff)
-//        {
-//            if (f.canDisplay('\u266f'))
-//             System.out.println(f.getName()+" "+f.canDisplay('\u266f'));
-//        }
-    }
+        }
 
     public java.util.List<Tablature> readFile(String fileName) throws IOException {
         java.util.List<Tablature> list = new ArrayList<>();
@@ -162,7 +157,7 @@ public class DrawTabs {
         String line = in.readLine();
         java.util.List<String> strList = null;
         while (line != null) {
-            if (line.length() == 0) {
+            if (line.isEmpty()) {
                 list.add(Tablature.parse(Objects.requireNonNull(strList)));
                 strList = null;
                 line = in.readLine();
