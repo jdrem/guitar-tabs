@@ -71,6 +71,7 @@ Tab:
 ```
 
 Produces:
+
 ![F Sharp Chord](examples/f-sharp.svg)
 
 This shows a barre on the second fret.
@@ -86,6 +87,7 @@ Tab:
 -43---
 ```
 Produces:
+
 ![B Flat Chord](examples/b-flat.svg)
 
 This shows a fret number of 5 to show it starts at the 5th fret below the nut.
@@ -100,6 +102,7 @@ Tab:
 -32---
 ```
 Produces:
+
 ![E Chord](examples/e.svg)
 
 This suppresses the display of the notes the strings play.
@@ -117,6 +120,7 @@ XX----
 --3---
 ```
 Produces:
+
 ![G minor Chord](examples/gm.svg)
 
 This shows the finger numbers below the staff.
