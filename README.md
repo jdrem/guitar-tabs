@@ -2,19 +2,6 @@
 
 Program to turn a simple description of a guitar tablature into an image.
 
-This input:
-```
-Name: E
-Tuning: EADGBE
-Fret: 0
-Tab:
-0--100
--32---
-```
-Into this image:
-
-![E chord](examples/e.svg)
-
 ## Settings
 ### Name
 The name of the chord. Hash signs will be converted to sharp signs (# -> ♯) and lower case b to flat (b -> ♭). Required.
@@ -26,7 +13,7 @@ Alternate tuning to use. Optional, default is EADGBE.
 The top fret in the chord. Optional, default is 0. For fret 0, the top line is thicker, for others it's the same size as all the other lines.
 
 ### Numbering
-Where the finger numberings are shown. *Embedded* displays them in the fingering dot, *BelowStaff* shows them under the turntable. Default is Embedded.
+Where the finger numberings are shown. *Embedded* displays them in the fingering dot, *BelowStaff* shows them under the tablature. Default is Embedded.
 
 ### ShowNotes
 Whether or not to show the note each string is sounding. Default is true.
@@ -35,3 +22,17 @@ Whether or not to show the note each string is sounding. Default is true.
 The next lines show what the fingerings should be. Each line shows the fingerings for each fret starting from the top. In the first line open and unplayed strings should be specified as 0 or X. The numbers between 1 and 4 are the fingerings. A hyphen (-) shows the string is not fingered. One or more equals signs (=) between the same number (usually 1) are a barre.
 
 ## Examples
+
+### Chord with no options
+This tab:
+```
+Name: E
+Tab:
+0--100
+-32---
+```
+
+Produces:
+
+![E chord](examples/e.svg)
+
