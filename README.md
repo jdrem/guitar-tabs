@@ -18,9 +18,6 @@ Where the finger numberings are shown. *Embedded* displays them in the fingering
 ### ShowNotes
 Whether or not to show the note each string is sounding. Default is true.
 
-### Numbering
-Where the finger numberings appear. Either *Embedded* in the dot (the default) or *BelowTheStaff*.
-
 ### Tab
 The next lines show what the fingerings should be. Each line shows the fingerings for each fret starting from the top. In the first line open and unplayed strings should be specified as 0 or X. The numbers between 1 and 4 are the fingerings. A hyphen (-) shows the string is not fingered. One or more equals signs (=) between the same number (usually 1) are a barre.
 
