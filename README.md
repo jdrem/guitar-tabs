@@ -122,3 +122,24 @@ Produces:
 
 This shows the finger numbers below the staff.
 
+## How to Use
+Create a Graphics2D implementation, for instance by creating an SVGGeneraor object:
+```java
+DOMImplementation domImpl = GenericDOMImplementation.getDOMImplementation();
+String svgNS = "http://www.w3.org/2000/svg";
+Document document = domImpl.createDocument(svgNS, "svg", null);
+SVGGraphics2D svgGenerator = new SVGGraphics2D(document);
+```
+Then read in the tablature string description from a file and parse it to a Tablature object:
+```java
+List<String> lines = Files.readAllLines(Paths.get("input.tab"), StandardCharsets.UTF_8);
+Tablature tablature = Tablature.parse(lines);
+```
+And write it to a file in SVG format:
+```java
+Area area = tablature.draw(svgGenerator);
+// Scale or translate with AffineTransform if needed
+FileOutputStream imageFileStream = new FileOutputStream(imageFileName);
+Writer out = new OutputStreamWriter("output.svg", StandardCharsets.UTF_8);
+svgGenerator.stream(out, true);
+```
